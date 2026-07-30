@@ -947,7 +947,147 @@ final class LegacyDbUtil
 
     public function backup(array $preferences = []): string
     {
-        return service('dbutil', $this->database->connection())->backup($preferences);
+        $connection = $this->database->connection();
+        $format     = strtolower((string) ($preferences['format'] ?? 'gzip'));
+        if ($format === 'zip') {
+            $format = 'gzip';
+        }
+
+        if (strcasecmp($connection->DBDriver, 'MySQLi') === 0) {
+            $backup = $this->mysqlBackup($preferences);
+        } else {
+            $preferences['format'] = 'txt';
+            $backup = \Config\Database::utils($connection)->backup($preferences);
+            if (! is_string($backup)) {
+                throw new RuntimeException('Database backup generation failed.');
+            }
+        }
+
+        if ($format !== 'gzip') {
+            return $backup;
+        }
+
+        $compressed = gzencode($backup, 6);
+        if ($compressed === false) {
+            throw new RuntimeException('Database backup compression failed.');
+        }
+
+        return $compressed;
+    }
+
+    private function mysqlBackup(array $preferences): string
+    {
+        $connection = $this->database->connection();
+        $newline    = (string) ($preferences['newline'] ?? "\n");
+        $ignore     = array_map('strtolower', (array) ($preferences['ignore'] ?? []));
+        $requested  = array_map('strtolower', (array) ($preferences['tables'] ?? []));
+
+        $tableResult = $connection->query('SHOW FULL TABLES');
+        if (! $tableResult instanceof BaseResult) {
+            throw new RuntimeException('Unable to list database tables.');
+        }
+
+        $objects = [];
+        foreach ($tableResult->getResultArray() as $row) {
+            $values = array_values($row);
+            $name   = (string) ($values[0] ?? '');
+            if ($name === '' || in_array(strtolower($name), $ignore, true)) {
+                continue;
+            }
+            if ($requested !== [] && ! in_array(strtolower($name), $requested, true)) {
+                continue;
+            }
+
+            $objects[] = [
+                'name' => $name,
+                'type' => strtoupper((string) ($values[1] ?? 'BASE TABLE')),
+            ];
+        }
+
+        $dump = '-- PicoPos database backup' . $newline
+            . '-- Generated: ' . date('Y-m-d H:i:s') . $newline . $newline
+            . 'SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";' . $newline
+            . 'SET NAMES utf8mb4;' . $newline
+            . 'SET FOREIGN_KEY_CHECKS = 0;' . $newline . $newline;
+        $views = [];
+
+        foreach ($objects as $object) {
+            $name       = $object['name'];
+            $identifier = $this->quoteIdentifier($name);
+            $createResult = $connection->query('SHOW CREATE TABLE ' . $identifier);
+            if (! $createResult instanceof BaseResult) {
+                throw new RuntimeException('Unable to read schema for table: ' . $name);
+            }
+
+            $createRow = $createResult->getRowArray();
+            $createSql = (string) (array_values($createRow)[1] ?? '');
+            if ($createSql === '') {
+                throw new RuntimeException('Empty schema returned for table: ' . $name);
+            }
+
+            if ($object['type'] === 'VIEW') {
+                $views[] = 'DROP VIEW IF EXISTS ' . $identifier . ';' . $newline
+                    . $createSql . ';' . $newline . $newline;
+                continue;
+            }
+
+            if (($preferences['add_drop'] ?? true) === true) {
+                $dump .= 'DROP TABLE IF EXISTS ' . $identifier . ';' . $newline;
+            }
+            $dump .= $createSql . ';' . $newline . $newline;
+
+            if (($preferences['add_insert'] ?? true) !== true) {
+                continue;
+            }
+
+            $dataResult = $connection->query('SELECT * FROM ' . $identifier);
+            if (! $dataResult instanceof BaseResult) {
+                throw new RuntimeException('Unable to read data from table: ' . $name);
+            }
+
+            $rows = $dataResult->getResultArray();
+            foreach (array_chunk($rows, 100) as $chunk) {
+                if ($chunk === []) {
+                    continue;
+                }
+
+                $columns = array_map(
+                    fn (string $column): string => $this->quoteIdentifier($column),
+                    array_keys($chunk[0]),
+                );
+                $values = [];
+                foreach ($chunk as $row) {
+                    $values[] = '(' . implode(', ', array_map(
+                        fn (mixed $value): string => $this->sqlValue($value),
+                        array_values($row),
+                    )) . ')';
+                }
+
+                $dump .= 'INSERT INTO ' . $identifier
+                    . ' (' . implode(', ', $columns) . ') VALUES' . $newline
+                    . implode(',' . $newline, $values) . ';' . $newline . $newline;
+            }
+        }
+
+        if ($views !== []) {
+            $dump .= '-- Views' . $newline . $newline . implode('', $views);
+        }
+
+        return $dump . 'SET FOREIGN_KEY_CHECKS = 1;' . $newline;
+    }
+
+    private function quoteIdentifier(string $identifier): string
+    {
+        return '`' . str_replace('`', '``', $identifier) . '`';
+    }
+
+    private function sqlValue(mixed $value): string
+    {
+        if ($value === null) {
+            return 'NULL';
+        }
+
+        return (string) $this->database->connection()->escape($value);
     }
 }
 

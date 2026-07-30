@@ -107,13 +107,11 @@
 			// Backup your entire database and assign it to a variable
 			$backup = $this->dbutil->backup($prefs);
 
-			// Load the file helper and write the file to your server
-			$this->load->helper('file');
-			write_file('dbbackup/dbbackup'.date('d-M-Y-h-m-s').'.gz', $backup);
-
-			// Load the download helper and send the file to your desktop
-			$this->load->helper('download');
-			force_download('dbbackup/dbbackup'.date('d-M-Y-h-m-s').'.gz', $backup);
+			// CI4 streams the generated archive directly. This avoids writing
+			// backups inside the public directory and replaces CI3's removed
+			// force_download() helper.
+			$file_name = 'picopos-database-'.date('Y-m-d-H-i-s').'.sql.gz';
+			return service('response')->download($file_name, $backup, true);
 
 		}
 

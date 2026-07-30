@@ -1,6 +1,6 @@
 <?php
   function demo_app(){
-    return true;
+    return false;
   }
   function app_version(){
     return '3.1';
