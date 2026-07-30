@@ -1,0 +1,27 @@
+# Fallback for shared hosts that cannot point the domain document root to public/.
+# The recommended document root is still: /path/to/pos-ci4/public
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never expose application code, dependencies, runtime data, or secrets.
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(?:app|legacy|tests|vendor|writable)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:\.env|composer\.(?:json|lock)|spark|phpunit(?:\.dist)?\.xml|preload\.php|README\.md|MIGRATION\.md)$ - [F,L,NC]
+
+    # Internally serve the public web root without adding /public to the URL.
+    RewriteRule ^$ public/ [L]
+    RewriteCond %{REQUEST_URI} !/public/ [NC]
+    RewriteRule ^(.+)$ public/$1 [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    ErrorDocument 404 /public/index.php
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

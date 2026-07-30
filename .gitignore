@@ -1,0 +1,188 @@
+#-------------------------
+# Operating Specific Junk Files
+#-------------------------
+
+# OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# OS X Thumbnails
+._*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# Linux
+*~
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+#-------------------------
+# Environment Files
+#-------------------------
+# These should never be under version control,
+# as it poses a security risk.
+.env
+.env.*
+!.env.example
+!.env.production.example
+.vagrant
+Vagrantfile
+
+#-------------------------
+# Temporary Files
+#-------------------------
+/writable/cache/*
+!/writable/cache/index.html
+
+/writable/logs/*
+!/writable/logs/index.html
+
+/writable/session/*
+!/writable/session/index.html
+
+/writable/uploads/*
+!/writable/uploads/index.html
+
+/writable/debugbar/*
+!/writable/debugbar/index.html
+
+php_errors.log
+*.log
+*.tmp
+*.temp
+*.cache
+
+# Project-local scratch/output directory
+/tmp/*
+!/tmp/.gitkeep
+
+#-------------------------
+# User Guide Temp Files
+#-------------------------
+/user_guide_src/build/*
+/user_guide_src/cilexer/build/*
+/user_guide_src/cilexer/dist/*
+/user_guide_src/cilexer/pycilexer.egg-info/*
+
+#-------------------------
+# Test Files
+#-------------------------
+/tests/coverage*
+
+# Don't save phpunit under version control.
+/phpunit
+/.phpunit.cache/
+/.phpunit.result.cache
+
+#-------------------------
+# Composer
+#-------------------------
+vendor/
+composer.phar
+
+# Local machine configuration and database/archive backups
+/php-ci4.ini
+*.sql
+*.zip
+*.tar
+*.gz
+
+# Legacy copies replaced by Composer or not required at runtime
+/legacy/application/libraries/dompdf/
+/legacy/application/libraries/tcpdf/examples/
+/legacy/application/libraries/tcpdf/fonts/**/*.ttf
+/legacy/application/libraries/tcpdf/fonts/**/*.otf
+/legacy/application/libraries/tcpdf/fonts/**/*.zip
+/legacy/application/libraries/tcpdf/fonts/**/*.rar
+# Purchase PDF generation embeds this font directly.
+!/legacy/application/libraries/tcpdf/fonts/NotoSerifBengali-Regular.ttf
+/legacy/application/**/*.bak
+/legacy/application/config/database.php
+/public/theme/plugins/datatables/extensions/TableTools/images/psd/
+/public/theme/build/
+/public/theme/**/examples/
+/public/theme/**/example/
+/public/theme/**/test/
+/public/theme/**/tests/
+/public/theme/**/less/
+/public/theme/**/scss/
+/public/theme/**/sass/
+/public/theme/**/builder/
+
+# Runtime business uploads are stored outside source control. Existing tracked
+# defaults remain tracked; new customer/item/user media should be backed up and
+# copied to hosting separately.
+/public/uploads/items/*
+/public/uploads/customers/*
+/public/uploads/users/*
+/public/uploads/signature/*
+/public/uploads/store/*
+/public/uploads/company/*
+/public/uploads/site/*
+
+# Imported CSV copies are temporary. The downloadable clean templates live in
+# public/uploads/csv/examples/ and remain part of the repository.
+/public/uploads/csv/customers/*
+/public/uploads/csv/suppliers/*
+/public/uploads/csv/items/*
+/public/uploads/csv/services/*
+
+#-------------------------
+# IDE / Development Files
+#-------------------------
+
+# Modules Testing
+_modules/*
+
+# phpenv local config
+.php-version
+
+# Jetbrains editors (PHPStorm, etc)
+.idea/
+*.iml
+
+# NetBeans
+/nbproject/
+/build/
+/builds
+/nbbuild/
+/dist/
+/nbdist/
+/nbactions.xml
+/nb-configuration.xml
+/.nb-gradle/
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+.phpintel
+/api/
+
+# Visual Studio Code
+.vscode/
+
+/results/
+/phpunit.xml
