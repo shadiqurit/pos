@@ -54,7 +54,11 @@
 
   function show_sql_mode_page(){
     $CI =& get_instance();
-    if(!$CI->db->query(" SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")){
+    // Never change MySQL's global SQL mode from the web application. In
+    // production that requires SUPER/SYSTEM_VARIABLES_ADMIN and would change
+    // behaviour for every database client. Restrict the compatibility change
+    // to the current request's connection instead.
+    if(!$CI->db->query("SET SESSION sql_mode = REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'ONLY_FULL_GROUP_BY,', ''), ',ONLY_FULL_GROUP_BY', ''), 'ONLY_FULL_GROUP_BY', '')")){
       legacy_show_error("Please make sure your database should not be enabled with SQL_FULL_GROUP_BY, For More information Click on Given link: <a href='".base_url()."/help/#full_group_by' target='_blank'>Click here to check!</a>(Full Group By Check)", 403, $heading = "SQL_FULL_GROUP_BY ENABLED!!");
     }else{
       return true;

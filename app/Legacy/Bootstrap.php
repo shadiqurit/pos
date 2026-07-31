@@ -54,7 +54,18 @@ final class LegacyRuntime
         self::setController($controller);
         helper(['url', 'form']);
 
-        $controller->db              = self::$database ??= new LegacyDatabase(db_connect());
+        $connection = db_connect();
+
+        // MySQL 8 enables ONLY_FULL_GROUP_BY by default. The legacy POS
+        // queries are not compatible with that mode, but changing the GLOBAL
+        // server setting would require administrative database privileges and
+        // affect every application sharing the server. Apply the compatibility
+        // setting to this request's connection only.
+        $connection->query(
+            "SET SESSION sql_mode = REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'ONLY_FULL_GROUP_BY,', ''), ',ONLY_FULL_GROUP_BY', ''), 'ONLY_FULL_GROUP_BY', '')",
+        );
+
+        $controller->db              = self::$database ??= new LegacyDatabase($connection);
         $controller->session         = new LegacySession();
         $controller->input           = new LegacyInput();
         $controller->security        = new LegacySecurity();
