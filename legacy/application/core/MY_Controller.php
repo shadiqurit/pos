@@ -89,7 +89,10 @@ class MY_Controller extends CI_Controller{
                                 'VIEW_DATE'     => $date_view_format,
                                 'CUR_TIME'      => $time_format,
                                 'SYSTEM_IP'     => $_SERVER['REMOTE_ADDR'],
-                                'SYSTEM_NAME'   => gethostbyaddr($_SERVER['REMOTE_ADDR']),
+                                // Reverse DNS can block each web request while the VPS waits
+                                // for an external DNS response. The IP is already retained for
+                                // audit records, so use it as the stable system identifier.
+                                'SYSTEM_NAME'   => $_SERVER['REMOTE_ADDR'],
                                 'CUR_USERNAME'  => $this->session->userdata('inv_username'),
                                 'CUR_USERID'    => $this->session->userdata('inv_userid'),
                                 'CUR_USERID'    => $this->session->userdata('inv_userid'),
