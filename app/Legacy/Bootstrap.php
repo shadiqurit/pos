@@ -471,6 +471,11 @@ final class LegacyDatabase
         return $this->connection->transCommit();
     }
 
+    public function trans_status(): bool
+    {
+        return $this->connection->transStatus();
+    }
+
     public function trans_rollback(): bool
     {
         return $this->connection->transRollback();

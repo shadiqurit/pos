@@ -1216,18 +1216,19 @@ class Sales_model extends CI_Model {
 
 		                <div class="col-md-6">
 		                  <div class="">
-		                    <label for="payment_type"><?= $this->lang->line('payment_type'); ?></label>
-		                    <select class="form-control" id='payment_type' name="payment_type" onchange="show_cheque_details()">
-		                      <?php
-		                        $q1=$this->db->query("select * from db_paymenttypes where status=1 and store_id=".get_current_store_id());
-		                         if($q1->num_rows()>0){
+						    <label for="payment_type"><?= $this->lang->line('payment_type'); ?></label>
+						    <select class="form-control" id='payment_type' name="payment_type" onchange="show_cheque_details()">
+						      <option value="">Select payment type</option>
+						      <?php
+						        $q1=$this->db->query("select * from db_paymenttypes where status=1 and store_id=".get_current_store_id());
+						         if($q1->num_rows()>0){
 		                             foreach($q1->result() as $res1){
 		                             echo "<option value='".$res1->payment_type."'>".$res1->payment_type ."</option>";
 		                           }
-		                         }
-		                         else{
-		                            echo "No Records Found";
-		                         }
+						         }
+						         else{
+						            echo "<option value='' disabled>No active payment types found</option>";
+						         }
 		                        ?>
 		                    </select>
 		                    <span id="payment_type_msg" style="display:none" class="text-danger"></span>
@@ -1296,10 +1297,12 @@ class Sales_model extends CI_Model {
 	public function save_payment(){
 		extract($this->xss_html_filter(array_merge($this->data,$_POST,$_GET)));
 		//print_r($this->xss_html_filter(array_merge($this->data,$_POST,$_GET)));exit();
-    	if($amount=='' || $amount==0){$amount=null;}
-		if($amount>0 && !empty($payment_type)){
-			$this->db->query("ALTER TABLE db_salespayments AUTO_INCREMENT = 1");
+		if (empty($payment_type)) {
+			return "Please select a payment type.";
+		}
 
+        if($amount=='' || $amount==0){$amount=null;}
+		if($amount>0){
 			$this->db->trans_begin();
 
 			$payment_code=get_init_code('sales_payment');
@@ -1374,11 +1377,16 @@ class Sales_model extends CI_Model {
 			
 		}
 		else{
-			return "Please Enter Valid Amount!";
+			return "Please enter a valid amount.";
 		}
 		
 		$q10=$this->update_sales_payment_status($sales_id,$customer_id);
 		if($q10!=1){
+			return "failed";
+		}
+
+		if ($this->db->trans_status() === false) {
+			$this->db->trans_rollback();
 			return "failed";
 		}
 

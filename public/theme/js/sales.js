@@ -514,9 +514,14 @@ function save_payment(sales_id){
     }
 
 
-   //Validate Input box or selection box should not be blank or empty
+    //Validate Input box or selection box should not be blank or empty
     check_field("amount");
     check_field("payment_date");
+    check_field("payment_type");
+
+    if (!flag) {
+      return false;
+    }
 
 
     var payment_date=$("#payment_date").val();
@@ -697,4 +702,4 @@ $('#item_search').keypress(function (e) {
  if(key == 13){
     $("#item_search").autocomplete('search');
   }
-});  
+});
